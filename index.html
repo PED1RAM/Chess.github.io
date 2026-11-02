@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تورنمنت شطرنج جام شهرها</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        .chess-pattern {
+            background-image: linear-gradient(45deg, rgba(255,255,255,0.02) 25%, transparent 25%), 
+                              linear-gradient(-45deg, rgba(255,255,255,0.02) 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.02) 75%), 
+                              linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.02) 75%);
+            background-size: 40px 40px;
+            background-position: 0 0, 0 20px, 20px -20px, -20px 0;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .gold-gradient {
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        @keyframes pulse-gold {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); }
+            50% { box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.2); }
+        }
+        .tiebreaker-glow {
+            animation: pulse-gold 2.5s infinite;
+        }
+    </style>
+</head>
+<body class="chess-pattern pb-16">
+
+    <!-- Top Navigation / Header -->
+    <header class="sticky top-0 z-30 glass-card border-b border-slate-800/80 shadow-lg">
+        <div class="max-w-5xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl gold-gradient flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid fa-chess-king text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-2">
+                        تورنمنت شطرنج
+                        <span id="syncStatus" class="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                            زنده
+                        </span>
+                    </h1>
+                    <p class="text-xs text-slate-400">رقابت ۵ دوره‌ای تیم‌ها (برد: ۳ | مساوی: ۱ | باخت: ۰)</p>
+                </div>
+            </div>
+
+            <!-- Admin Controls -->
+            <div class="flex items-center gap-2">
+                <div id="adminBadge" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>حالت مدیر فعال</span>
+                </div>
+
+                <button onclick="openTelegramGuideModal()" class="px-3 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 text-xs sm:text-sm font-medium transition flex items-center gap-1.5" title="راهنمای تلگرام و اشتراک‌گذاری">
+                    <i class="fa-brands fa-telegram text-base"></i>
+                    <span>اشتراک در تلگرام</span>
+                </button>
+
+                <button id="loginBtn" onclick="openLoginModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs sm:text-sm font-medium transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-lock text-amber-400"></i>
+                    <span>ورود مدیر</span>
+                </button>
+
+                <button id="resetBtn" onclick="openResetModal()" class="hidden px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs sm:text-sm font-medium transition flex items-center gap-1.5" title="ریست کل مسابقات">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span class="hidden sm:inline">شروع مجدد</span>
+                </button>
+
+                <button id="logoutBtn" onclick="logoutAdmin()" class="hidden px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs sm:text-sm font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-right-from-bracket text-rose-400"></i>
+                    <span>خروج</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-5xl mx-auto px-4 mt-6 space-y-6">
+
+        <!-- Champion Banner (Shown when tournament concludes) -->
+        <div id="championBanner" class="hidden rounded-2xl p-6 gold-gradient text-slate-950 shadow-2xl shadow-amber-500/20 relative overflow-hidden">
+            <div class="absolute -left-6 -bottom-6 opacity-15 pointer-events-none">
+                <i class="fa-solid fa-trophy text-9xl"></i>
+            </div>
+            <div class="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-right">
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                    <div class="w-16 h-16 rounded-2xl bg-slate-950/90 text-amber-400 flex items-center justify-center text-3xl shadow-xl">
+                        <i class="fa-solid fa-crown"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-950/20 text-slate-900">پایان تورنمنت • قهرمان نهایی</span>
+                        <h2 id="championName" class="text-2xl sm:text-3xl font-black mt-1">---</h2>
+                        <p id="championSubtext" class="text-sm font-semibold text-slate-900/80 mt-0.5">با کسب بیشترین امتیاز در جدول رده‌بندی</p>
+                    </div>
+                </div>
+                <div class="bg-slate-950/15 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-slate-950/10">
+                    <span class="text-xs font-bold block text-slate-900">وضعیت مسابقات</span>
+                    <span class="text-sm font-black flex items-center justify-center sm:justify-start gap-1.5">
+                        <i class="fa-solid fa-circle-check"></i>
+                        تکمیل شده
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tiebreaker Special Section (Conditional) -->
+        <div id="tiebreakerSection" class="hidden rounded-2xl glass-card border-2 border-amber-500/60 p-5 sm:p-6 tiebreaker-glow relative overflow-hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-700/80">
+                <div class="flex items-start sm:items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-2xl shrink-0">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[11px] font-bold rounded bg-amber-500 text-slate-950">دور ششم (فینال تک‌حذفی)</span>
+                            <span class="text-xs text-amber-300 font-medium">تساوی امتیاز در صدر جدول!</span>
+                        </div>
+                        <h3 class="text-lg font-extrabold text-white mt-1">مسابقه تعیین قهرمان نهایی (تای‌بریک)</h3>
+                        <p class="text-xs text-slate-300 mt-0.5">از آنجایی که نفر اول و دوم پس از پایان ۵ دور امتیاز برابری دارند، برنده این دیدار قهرمان تورنمنت خواهد شد.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tiebreakerMatchContainer" class="mt-5">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Grid Layout for Standings & Rounds -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- Standings Table (Right Side on Desktop - 5 cols) -->
+            <div class="lg:col-span-5 glass-card rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <i class="fa-solid fa-ranking-star text-amber-400 text-lg"></i>
+                        <h2 class="text-base sm:text-lg font-bold text-white">جدول رده‌بندی امتیازات</h2>
+                    </div>
+                    <span id="completedCountBadge" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 font-medium">
+                        ۰ از ۱۰ بازی
+                    </span>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-700/80 text-[11px] text-slate-400 uppercase">
+                                <th class="py-2.5 px-2 w-8 text-center">#</th>
+                                <th class="py-2.5 px-2">تیم / بازیکن</th>
+                                <th class="py-2.5 px-1.5 text-center" title="تعداد بازی انجام شده">بازی</th>
+                                <th class="py-2.5 px-1.5 text-center text-emerald-400" title="برد (۳ امتیاز)">ب</th>
+                                <th class="py-2.5 px-1.5 text-center text-sky-400" title="مساوی (۱ امتیاز)">م</th>
+                                <th class="py-2.5 px-1.5 text-center text-rose-400" title="باخت (۰ امتیاز)">خ</th>
+                                <th class="py-2.5 px-2 text-center font-bold text-amber-400">امتیاز</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standingsBody" class="divide-y divide-slate-800/70 text-sm">
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Point System Legend -->
+                <div class="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                    <div class="flex items-center gap-3">
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> برد: ۳</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-400"></span> مساوی: ۱</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-400"></span> باخت: ۰</span>
+                    </div>
+                    <span class="text-[11px] text-slate-500">بروزرسانی خودکار</span>
+                </div>
+            </div>
+
+            <!-- Rounds & Matches (Left Side on Desktop - 7 cols) -->
+            <div class="lg:col-span-7 glass-card rounded-2xl p-5 shadow-xl">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <i class="fa-solid fa-chess-board text-amber-400 text-lg"></i>
+                        <h2 class="text-base sm:text-lg font-bold text-white">برنامه و نتایج دوره‌ها</h2>
+                    </div>
+                    <span id="viewerNotice" class="text-xs text-slate-400 flex items-center gap-1.5 bg-slate-800/90 px-3 py-1.5 rounded-lg border border-slate-700/70">
+                        <i class="fa-solid fa-eye text-sky-400"></i>
+                        <span>حالت تماشاگر (برای ثبت امتیاز وارد شوید)</span>
+                    </span>
+                </div>
+
+                <!-- Round Selector Tabs -->
+                <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-2 mb-4 border-b border-slate-800" id="roundTabs">
+                    <!-- Generated by JS -->
+                </div>
+
+                <!-- Matches List for Selected Round -->
+                <div id="roundContent" class="space-y-4">
+                    <!-- Generated by JS -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div class="glass-card border border-slate-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-amber-400"></i>
+                    ورود مدیر امتیازات
+                </h3>
+                <button onclick="closeLoginModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-lg flex items-center justify-center bg-slate-800/80">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+                فقط مدیر تورنمنت امکان ثبت و تغییر نتایج را دارد. سایر کاربران نتایج را به صورت زنده مشاهده می‌کنند.
+            </p>
+            <form onsubmit="handleLogin(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">نام کاربری (User)</label>
+                    <input type="text" id="usernameInput" dir="ltr" required placeholder="admin" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-500 transition text-left">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">رمز عبور (Password)</label>
+                    <input type="password" id="passwordInput" dir="ltr" required placeholder="•••••" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-500 transition text-left">
+                </div>
+                <div id="loginError" class="hidden text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg p-2.5 text-center">
+                    نام کاربری یا رمز عبور اشتباه است!
+                </div>
+                <div class="pt-2 flex gap-2">
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl gold-gradient text-slate-950 font-bold text-sm hover:opacity-95 transition shadow-lg shadow-amber-500/20">
+                        ورود به پنل مدیریت
+                    </button>
+                    <button type="button" onclick="closeLoginModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition">
+                        انصراف
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reset Confirmation Modal -->
+    <div id="resetModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div class="glass-card border border-rose-500/40 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <div class="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center text-2xl mb-4 mx-auto">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white text-center mb-2">صفر کردن تمام امتیازات؟</h3>
+            <p class="text-xs text-slate-300 text-center mb-6 leading-relaxed">
+                آیا مطمئن هستید که می‌خواهید تمام نتایج ثبت شده در هر ۵ دور و فینال را پاک کنید و تورنمنت را از صفر شروع کنید؟
+            </p>
+            <div class="flex gap-2.5">
+                <button onclick="confirmResetTournament()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm transition shadow-lg shadow-rose-600/20">
+                    بله، همه را صفر کن
+                </button>
+                <button onclick="closeResetModal()" class="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition">
+                    لغو
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Telegram Share & Guide Modal -->
+    <div id="telegramModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div class="glass-card border border-sky-500/40 rounded-2xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-brands fa-telegram text-sky-400 text-2xl"></i>
+                    ارسال و استفاده در تلگرام
+                </h3>
+                <button onclick="closeTelegramGuideModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-lg flex items-center justify-center bg-slate-800/80">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <div class="p-3.5 rounded-xl bg-sky-500/10 border border-sky-500/25 space-y-2">
+                    <h4 class="font-bold text-sky-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-link"></i>
+                        روش اول: کپی لینک مستقیم حاوی آخرین امتیازات (بدون نیاز به سرور!)
+                    </h4>
+                    <p class="text-xs text-slate-300">
+                        حتی اگر فایل را روی هاست‌های رایگان مثل <b>GitHub Pages</b> یا <b>CodePen</b> بگذارید، بعد از اینکه ادمین امتیازها را وارد کرد، با زدن دکمه زیر یک <b>لینک مخصوص</b> ساخته می‌شود که تمام امتیازات داخل خودِ لینک ذخیره شده است! هر کس در تلگرام روی آن بزند، دقیقاً جدول آپدیت‌شده را می‌بیند:
+                    </p>
+                    <button onclick="copyShareableTournamentLink()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
+                        <i class="fa-solid fa-share-nodes"></i>
+                        <span>کپی لینک سایت به همراه آخرین امتیازات</span>
+                    </button>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 space-y-2">
+                    <h4 class="font-bold text-amber-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        ابزار کمکی: کپی متن آماده جدول برای گروه تلگرام
+                    </h4>
+                    <p class="text-xs text-slate-300">
+                        همچنین مدیر می‌تواند پس از هر دور با زدن دکمه زیر، جدول رده‌بندی و نتایج را به صورت متن مرتب کپی کرده و مستقیماً در گروه تلگرام پیست (Paste) کند:
+                    </p>
+                    <button onclick="copyTelegramReport()" class="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20">
+                        <i class="fa-solid fa-copy"></i>
+                        <span>کپی گزارش متنی جدول برای تلگرام</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-5 pt-3 border-t border-slate-800 flex justify-end">
+                <button onclick="closeTelegramGuideModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium transition">
+                    متوجه شدم
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-900/95 border border-slate-700 text-white text-xs sm:text-sm font-medium shadow-2xl">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toastMsg">تغییرات با موفقیت ذخیره شد</span>
+    </div>
+
+    <!-- Firebase SDK & Tournament Application Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Tournament Static Structure ---
+        const TEAMS = [
+            { id: 'miyaneh', name: 'میانه', initialOrder: 1 },
+            { id: 'hamedan', name: 'همدان', initialOrder: 2 },
+            { id: 'naein', name: 'نائین', initialOrder: 3 },
+            { id: 'karaj', name: 'کرج', initialOrder: 4 },
+            { id: 'ghasrdasht', name: 'قصردشت', initialOrder: 5 }
+        ];
+
+        const ROUNDS = [
+            {
+                number: 1,
+                title: 'دور اول',
+                bye: 'ghasrdasht',
+                matches: [
+                    { id: 'r1_m1', p1: 'miyaneh', p2: 'hamedan' },
+                    { id: 'r1_m2', p1: 'naein', p2: 'karaj' }
+                ]
+            },
+            {
+                number: 2,
+                title: 'دور دوم',
+                bye: 'karaj',
+                matches: [
+                    { id: 'r2_m1', p1: 'miyaneh', p2: 'naein' },
+                    { id: 'r2_m2', p1: 'hamedan', p2: 'ghasrdasht' }
+                ]
+            },
+            {
+                number: 3,
+                title: 'دور سوم',
+                bye: 'hamedan',
+                matches: [
+                    { id: 'r3_m1', p1: 'miyaneh', p2: 'karaj' },
+                    { id: 'r3_m2', p1: 'naein', p2: 'ghasrdasht' }
+                ]
+            },
+            {
+                number: 4,
+                title: 'دور چهارم',
+                bye: 'naein',
+                matches: [
+                    { id: 'r4_m1', p1: 'miyaneh', p2: 'ghasrdasht' },
+                    { id: 'r4_m2', p1: 'hamedan', p2: 'karaj' }
+                ]
+            },
+            {
+                number: 5,
+                title: 'دور پنجم',
+                bye: 'miyaneh',
+                matches: [
+                    { id: 'r5_m1', p1: 'hamedan', p2: 'naein' },
+                    { id: 'r5_m2', p1: 'karaj', p2: 'ghasrdasht' }
+                ]
+            }
+        ];
+
+        // --- Application State ---
+        let isAdmin = false;
+        let activeRound = 1;
+        let tournamentData = {
+            matches: {},        // e.g. { r1_m1: 'p1' | 'draw' | 'p2' | null }
+            tiebreakerWinner: null, // teamId if tiebreaker is played
+            updatedAt: null
+        };
+
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let appId = typeof __app_id !== 'undefined' ? __app_id : 'default-chess-tournament-app';
+
+        // Helper to get team name by ID
+        function getTeamName(id) {
+            const t = TEAMS.find(item => item.id === id);
+            return t ? t.name : id;
+        }
+
+        // Convert numbers to Persian digits
+        function toPersianNum(num) {
+            const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+            return String(num).replace(/\d/g, x => persianDigits[x]);
+        }
+
+        // Toast Helper
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const text = document.getElementById('toastMsg');
+
+            text.textContent = msg;
+            if (isError) {
+                icon.className = 'fa-solid fa-circle-exclamation text-rose-400 text-base';
+            } else {
+                icon.className = 'fa-solid fa-circle-check text-emerald-400 text-base';
+            }
+
+            toast.classList.remove('hidden');
+            toast.classList.add('flex');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('flex');
+            }, 3000);
+        }
+
+        // --- Calculate Standings & Tiebreaker Status ---
+        function computeTournamentStats() {
+            const stats = {};
+            TEAMS.forEach(t => {
+                stats[t.id] = {
+                    id: t.id,
+                    name: t.name,
+                    initialOrder: t.initialOrder,
+                    played: 0,
+                    wins: 0,
+                    draws: 0,
+                    losses: 0,
+                    points: 0
+                };
+            });
+
+            let completedMatchesCount = 0;
+
+            ROUNDS.forEach(round => {
+                round.matches.forEach(m => {
+                    const res = tournamentData.matches ? tournamentData.matches[m.id] : null;
+                    if (res === 'p1' || res === 'p2' || res === 'draw') {
+                        completedMatchesCount++;
+                        stats[m.p1].played++;
+                        stats[m.p2].played++;
+
+                        if (res === 'p1') {
+                            stats[m.p1].wins++;
+                            stats[m.p1].points += 3;
+                            stats[m.p2].losses++;
+                        } else if (res === 'p2') {
+                            stats[m.p2].wins++;
+                            stats[m.p2].points += 3;
+                            stats[m.p1].losses++;
+                        } else if (res === 'draw') {
+                            stats[m.p1].draws++;
+                            stats[m.p1].points += 1;
+                            stats[m.p2].draws++;
+                            stats[m.p2].points += 1;
+                        }
+                    }
+                });
+            });
+
+            // Sort standings:
+            // 1. Points descending
+            // 2. If tiebreaker winner exists between top tied teams, put tiebreaker winner first
+            // 3. Wins descending
+            // 4. Initial list order
+            const sorted = Object.values(stats).sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                if (tournamentData.tiebreakerWinner) {
+                    if (a.id === tournamentData.tiebreakerWinner) return -1;
+                    if (b.id === tournamentData.tiebreakerWinner) return 1;
+                }
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                return a.initialOrder - b.initialOrder;
+            });
+
+            const allRegularDone = completedMatchesCount === 10;
+            const first = sorted[0];
+            const second = sorted[1];
+            const isTopTied = first && second && (first.points === second.points) && first.points > 0;
+
+            // Tiebreaker is triggered when all 10 matches of the 5 rounds are complete AND #1 and #2 have equal points (or if admin already recorded a tiebreaker when they were tied)
+            const needsTiebreaker = isTopTied && (allRegularDone || Boolean(tournamentData.tiebreakerWinner));
+
+            return {
+                sorted,
+                completedMatchesCount,
+                allRegularDone,
+                isTopTied,
+                needsTiebreaker,
+                topTwo: [first, second]
+            };
+        }
+
+        // --- Render UI ---
+        function renderAll() {
+            const calc = computeTournamentStats();
+            renderHeaderControls();
+            renderStandings(calc);
+            renderRoundTabs(calc);
+            renderRoundMatches();
+            renderTiebreakerAndChampion(calc);
+        }
+
+        function renderHeaderControls() {
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const adminBadge = document.getElementById('adminBadge');
+            const viewerNotice = document.getElementById('viewerNotice');
+
+            if (isAdmin) {
+                loginBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                resetBtn.classList.remove('hidden');
+                adminBadge.classList.remove('hidden');
+                adminBadge.classList.add('flex');
+                viewerNotice.innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-400"></i><span class="text-amber-300 font-medium">روی نتیجه هر بازی کلیک کنید تا ذخیره شود</span>`;
+            } else {
+                loginBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                resetBtn.classList.add('hidden');
+                adminBadge.classList.add('hidden');
+                adminBadge.classList.remove('flex');
+                viewerNotice.innerHTML = `<i class="fa-solid fa-eye text-sky-400"></i><span>حالت تماشاگر (برای ثبت امتیاز وارد شوید)</span>`;
+            }
+        }
+
+        function renderStandings(calc) {
+            const tbody = document.getElementById('standingsBody');
+            const countBadge = document.getElementById('completedCountBadge');
+            countBadge.textContent = `${toPersianNum(calc.completedMatchesCount)} از ۱۰ بازی`;
+
+            tbody.innerHTML = calc.sorted.map((team, idx) => {
+                const rank = idx + 1;
+                let rankBadge = `<span class="w-6 h-6 rounded-lg bg-slate-800 text-slate-400 inline-flex items-center justify-center text-xs font-bold">${toPersianNum(rank)}</span>`;
+                let rowClass = "hover:bg-slate-800/40 transition";
+
+                if (rank === 1 && team.points > 0) {
+                    rankBadge = `<span class="w-6 h-6 rounded-lg gold-gradient text-slate-950 inline-flex items-center justify-center text-xs font-black shadow"><i class="fa-solid fa-trophy text-[11px]"></i></span>`;
+                    rowClass = "bg-amber-500/5 hover:bg-amber-500/10 transition";
+                } else if (rank === 2 && team.points > 0) {
+                    rankBadge = `<span class="w-6 h-6 rounded-lg bg-slate-300 text-slate-900 inline-flex items-center justify-center text-xs font-black">${toPersianNum(2)}</span>`;
+                } else if (rank === 3 && team.points > 0) {
+                    rankBadge = `<span class="w-6 h-6 rounded-lg bg-amber-700/80 text-amber-100 inline-flex items-center justify-center text-xs font-bold">${toPersianNum(3)}</span>`;
+                }
+
+                const isTieWinner = tournamentData.tiebreakerWinner === team.id && calc.needsTiebreaker;
+
+                return `
+                    <tr class="${rowClass}">
+                        <td class="py-3 px-2 text-center">${rankBadge}</td>
+                        <td class="py-3 px-2 font-bold text-white flex items-center gap-1.5">
+                            <span>${team.name}</span>
+                            ${isTieWinner ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold">برنده فینال</span>` : ''}
+                        </td>
+                        <td class="py-3 px-1.5 text-center text-slate-300 font-medium">${toPersianNum(team.played)}</td>
+                        <td class="py-3 px-1.5 text-center text-emerald-400 font-medium">${toPersianNum(team.wins)}</td>
+                        <td class="py-3 px-1.5 text-center text-sky-400 font-medium">${toPersianNum(team.draws)}</td>
+                        <td class="py-3 px-1.5 text-center text-rose-400 font-medium">${toPersianNum(team.losses)}</td>
+                        <td class="py-3 px-2 text-center">
+                            <span class="inline-block min-w-[2rem] py-0.5 px-2 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 font-black text-sm">
+                                ${toPersianNum(team.points)}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderRoundTabs(calc) {
+            const container = document.getElementById('roundTabs');
+            container.innerHTML = ROUNDS.map(r => {
+                const m1Done = Boolean(tournamentData.matches?.[r.matches[0].id]);
+                const m2Done = Boolean(tournamentData.matches?.[r.matches[1].id]);
+                const allDone = m1Done && m2Done;
+                const isActive = activeRound === r.number;
+
+                return `
+                    <button onclick="selectRound(${r.number})" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition flex items-center gap-2 ${
+                        isActive 
+                            ? 'gold-gradient text-slate-950 shadow-md shadow-amber-500/15' 
+                            : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700/70'
+                    }">
+                        <span>${r.title}</span>
+                        ${allDone 
+                            ? `<i class="fa-solid fa-circle-check ${isActive ? 'text-slate-950' : 'text-emerald-400'} text-xs"></i>` 
+                            : `<span class="w-2 h-2 rounded-full ${m1Done || m2Done ? 'bg-amber-400' : 'bg-slate-600'}"></span>`
+                        }
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function renderRoundMatches() {
+            const round = ROUNDS.find(r => r.number === activeRound);
+            const container = document.getElementById('roundContent');
+            if (!round) return;
+
+            const matchesHtml = round.matches.map((m, idx) => {
+                const currentRes = tournamentData.matches?.[m.id] || null;
+                const p1Name = getTeamName(m.p1);
+                const p2Name = getTeamName(m.p2);
+
+                // Badge text for current status
+                let statusBadge = `<span class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">برگزار نشده</span>`;
+                if (currentRes === 'p1') {
+                    statusBadge = `<span class="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold">برد ${p1Name} (+۳ امتیاز)</span>`;
+                } else if (currentRes === 'p2') {
+                    statusBadge = `<span class="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold">برد ${p2Name} (+۳ امتیاز)</span>`;
+                } else if (currentRes === 'draw') {
+                    statusBadge = `<span class="text-[11px] px-2.5 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 font-semibold">مساوی (هر کدام +۱ امتیاز)</span>`;
+                }
+
+                // Interactive buttons for Admin vs Read-only display for Viewers
+                let actionArea = '';
+                if (isAdmin) {
+                    actionArea = `
+                        <div class="mt-3 pt-3 border-t border-slate-800/90 flex flex-wrap items-center justify-between gap-2">
+                            <span class="text-[11px] text-slate-400">ثبت نتیجه توسط مدیر:</span>
+                            <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+                                <button onclick="setMatchResult('${m.id}', 'p1')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition border ${
+                                    currentRes === 'p1' 
+                                        ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-lg shadow-emerald-500/20' 
+                                        : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                                }">
+                                    برد ${p1Name}
+                                </button>
+                                <button onclick="setMatchResult('${m.id}', 'draw')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition border ${
+                                    currentRes === 'draw' 
+                                        ? 'bg-sky-400 text-slate-950 border-sky-300 shadow-lg shadow-sky-400/20' 
+                                        : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                                }">
+                                    مساوی
+                                </button>
+                                <button onclick="setMatchResult('${m.id}', 'p2')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition border ${
+                                    currentRes === 'p2' 
+                                        ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-lg shadow-emerald-500/20' 
+                                        : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                                }">
+                                    برد ${p2Name}
+                                </button>
+                                ${currentRes ? `
+                                    <button onclick="setMatchResult('${m.id}', null)" class="px-2.5 py-1.5 rounded-lg text-xs bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition" title="پاک کردن نتیجه این بازی">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="rounded-xl bg-slate-900/75 border border-slate-800 p-4 shadow-sm hover:border-slate-700/80 transition">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-chess-knight text-amber-400"></i>
+                                میز شماره ${toPersianNum(idx + 1)}
+                            </span>
+                            ${statusBadge}
+                        </div>
+
+                        <div class="grid grid-cols-7 items-center gap-2 text-center py-2">
+                            <!-- Player 1 -->
+                            <div class="col-span-3 flex flex-col items-center p-2.5 rounded-xl border ${
+                                currentRes === 'p1' 
+                                    ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300' 
+                                    : currentRes === 'draw'
+                                    ? 'bg-sky-500/10 border-sky-500/30 text-sky-200'
+                                    : 'bg-slate-800/50 border-slate-800 text-white'
+                            }">
+                                <span class="text-base sm:text-lg font-extrabold">${p1Name}</span>
+                                <span class="text-[11px] mt-1 font-bold ${
+                                    currentRes === 'p1' ? 'text-emerald-400' : currentRes === 'draw' ? 'text-sky-400' : 'text-slate-400'
+                                }">
+                                    ${currentRes === 'p1' ? '+۳ امتیاز' : currentRes === 'draw' ? '+۱ امتیاز' : currentRes === 'p2' ? '۰ امتیاز' : '---'}
+                                </span>
+                            </div>
+
+                            <!-- VS Divider -->
+                            <div class="col-span-1 flex flex-col items-center justify-center">
+                                <span class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-black flex items-center justify-center">
+                                    VS
+                                </span>
+                            </div>
+
+                            <!-- Player 2 -->
+                            <div class="col-span-3 flex flex-col items-center p-2.5 rounded-xl border ${
+                                currentRes === 'p2' 
+                                    ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300' 
+                                    : currentRes === 'draw'
+                                    ? 'bg-sky-500/10 border-sky-500/30 text-sky-200'
+                                    : 'bg-slate-800/50 border-slate-800 text-white'
+                            }">
+                                <span class="text-base sm:text-lg font-extrabold">${p2Name}</span>
+                                <span class="text-[11px] mt-1 font-bold ${
+                                    currentRes === 'p2' ? 'text-emerald-400' : currentRes === 'draw' ? 'text-sky-400' : 'text-slate-400'
+                                }">
+                                    ${currentRes === 'p2' ? '+۳ امتیاز' : currentRes === 'draw' ? '+۱ امتیاز' : currentRes === 'p1' ? '۰ امتیاز' : '---'}
+                                </span>
+                            </div>
+                        </div>
+
+                        ${actionArea}
+                    </div>
+                `;
+            }).join('');
+
+            // Bye Card
+            const byeHtml = `
+                <div class="rounded-xl bg-amber-500/5 border border-amber-500/20 p-3.5 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center">
+                            <i class="fa-solid fa-mug-hot text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-400 block">استراحت این دور:</span>
+                            <span class="text-sm font-bold text-amber-300">${getTeamName(round.bye)}</span>
+                        </div>
+                    </div>
+                    <span class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-800/80 text-slate-400 border border-slate-700/60">
+                        بدون بازی در ${round.title}
+                    </span>
+                </div>
+            `;
+
+            container.innerHTML = matchesHtml + byeHtml;
+        }
+
+        function renderTiebreakerAndChampion(calc) {
+            const tiebreakerSection = document.getElementById('tiebreakerSection');
+            const tiebreakerMatchContainer = document.getElementById('tiebreakerMatchContainer');
+            const championBanner = document.getElementById('championBanner');
+            const championName = document.getElementById('championName');
+            const championSubtext = document.getElementById('championSubtext');
+
+            const [first, second] = calc.topTwo;
+
+            // Show Tiebreaker Section if needed
+            if (calc.needsTiebreaker && first && second) {
+                tiebreakerSection.classList.remove('hidden');
+
+                // Identify the two tied contenders consistently
+                const contenders = [first, second].sort((a, b) => a.initialOrder - b.initialOrder);
+                const c1 = contenders[0];
+                const c2 = contenders[1];
+                const winnerId = tournamentData.tiebreakerWinner;
+
+                let adminButtons = '';
+                if (isAdmin) {
+                    adminButtons = `
+                        <div class="mt-4 pt-3 border-t border-slate-700/80 flex flex-wrap items-center justify-between gap-2">
+                            <span class="text-xs text-amber-300 font-medium">انتخاب برنده فینال تک‌حذفی توسط مدیر:</span>
+                            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                                <button onclick="setTiebreakerWinner('${c1.id}')" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition ${
+                                    winnerId === c1.id 
+                                        ? 'gold-gradient text-slate-950 shadow-lg' 
+                                        : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-600'
+                                }">
+                                    قهرمانی ${c1.name}
+                                </button>
+                                <button onclick="setTiebreakerWinner('${c2.id}')" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition ${
+                                    winnerId === c2.id 
+                                        ? 'gold-gradient text-slate-950 shadow-lg' 
+                                        : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-600'
+                                }">
+                                    قهرمانی ${c2.name}
+                                </button>
+                                ${winnerId ? `
+                                    <button onclick="setTiebreakerWinner(null)" class="px-3 py-2 rounded-xl text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                                        حذف نتیجه
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                tiebreakerMatchContainer.innerHTML = `
+                    <div class="rounded-xl bg-slate-900/90 border border-amber-500/30 p-4">
+                        <div class="grid grid-cols-7 items-center gap-2 text-center">
+                            <div class="col-span-3 p-3 rounded-xl border ${
+                                winnerId === c1.id ? 'bg-amber-500/20 border-amber-400 text-amber-300' : 'bg-slate-800/70 border-slate-700 text-white'
+                            }">
+                                <div class="text-lg sm:text-xl font-black flex items-center justify-center gap-1.5">
+                                    ${winnerId === c1.id ? '<i class="fa-solid fa-crown text-amber-400"></i>' : ''}
+                                    <span>${c1.name}</span>
+                                </div>
+                                <span class="text-xs text-slate-400 mt-1 block">${toPersianNum(c1.points)} امتیاز در جدول</span>
+                            </div>
+
+                            <div class="col-span-1 flex flex-col items-center">
+                                <span class="w-9 h-9 rounded-full gold-gradient text-slate-950 font-black text-xs flex items-center justify-center shadow">
+                                    فینال
+                                </span>
+                            </div>
+
+                            <div class="col-span-3 p-3 rounded-xl border ${
+                                winnerId === c2.id ? 'bg-amber-500/20 border-amber-400 text-amber-300' : 'bg-slate-800/70 border-slate-700 text-white'
+                            }">
+                                <div class="text-lg sm:text-xl font-black flex items-center justify-center gap-1.5">
+                                    ${winnerId === c2.id ? '<i class="fa-solid fa-crown text-amber-400"></i>' : ''}
+                                    <span>${c2.name}</span>
+                                </div>
+                                <span class="text-xs text-slate-400 mt-1 block">${toPersianNum(c2.points)} امتیاز در جدول</span>
+                            </div>
+                        </div>
+                        ${adminButtons}
+                    </div>
+                `;
+            } else {
+                tiebreakerSection.classList.add('hidden');
+            }
+
+            // Show Champion Banner if all 10 matches are finished AND (no tie at #1 OR tiebreaker winner is chosen)
+            if (calc.allRegularDone && first && first.points > 0) {
+                if (!calc.isTopTied) {
+                    championBanner.classList.remove('hidden');
+                    championName.textContent = `قهرمان: ${first.name}`;
+                    championSubtext.textContent = `با کسب مقتدرانه ${toPersianNum(first.points)} امتیاز در پایان ۵ دور مسابقات`;
+                } else if (tournamentData.tiebreakerWinner) {
+                    const champTeam = getTeamName(tournamentData.tiebreakerWinner);
+                    championBanner.classList.remove('hidden');
+                    championName.textContent = `قهرمان: ${champTeam}`;
+                    championSubtext.textContent = `با پیروزی در دیدار فینال تک‌حذفی (تای‌بریک) پس از کسب ${toPersianNum(first.points)} امتیاز`;
+                } else {
+                    championBanner.classList.add('hidden');
+                }
+            } else {
+                championBanner.classList.add('hidden');
+            }
+        }
+
+        // --- Cloud Persistence (Firestore) ---
+        async function saveTournamentToCloud(newData) {
+            // Always update URL hash so the current URL carries the state automatically
+            updateUrlHashWithState(newData);
+
+            if (!db || !currentUser) {
+                renderAll();
+                showToast('امتیاز ثبت شد! (می‌توانید از بخش تلگرام لینک جدید را هم بفرستید)');
+                return;
+            }
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'tournament_state', 'main');
+                await setDoc(docRef, {
+                    matches: newData.matches || {},
+                    tiebreakerWinner: newData.tiebreakerWinner || null,
+                    updatedAt: Date.now()
+                });
+                showToast('امتیازات با موفقیت ذخیره و برای همه بروزرسانی شد');
+            } catch (err) {
+                console.error('Error saving to cloud:', err);
+                showToast('امتیاز ثبت شد!');
+            }
+        }
+
+        // Encode state into URL hash so external static hosts (GitHub Pages, etc.) work seamlessly without backend
+        function updateUrlHashWithState(data) {
+            try {
+                const compact = {
+                    m: data.matches || {},
+                    t: data.tiebreakerWinner || null
+                };
+                const encoded = btoa(encodeURIComponent(JSON.stringify(compact)));
+                window.history.replaceState(null, '', '#state=' + encoded);
+            } catch (e) {
+                console.error('Hash encode error:', e);
+            }
+        }
+
+        function loadStateFromUrlHash() {
+            try {
+                const hash = window.location.hash;
+                if (hash && hash.startsWith('#state=')) {
+                    const encoded = hash.replace('#state=', '');
+                    const decoded = JSON.parse(decodeURIComponent(atob(encoded)));
+                    if (decoded && typeof decoded === 'object') {
+                        tournamentData = {
+                            matches: decoded.m || {},
+                            tiebreakerWinner: decoded.t || null,
+                            updatedAt: Date.now()
+                        };
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.error('Hash decode error:', e);
+            }
+            return false;
+        }
+
+        async function initCloudSync() {
+            try {
+                if (typeof __firebase_config === 'undefined' || !__firebase_config) {
+                    renderAll();
+                    return;
+                }
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // RULE 3: Authenticate FIRST before any Firestore query
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                currentUser = auth.currentUser;
+
+                if (!currentUser) return;
+
+                // RULE 1: Strict public path
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'tournament_state', 'main');
+                onSnapshot(
+                    docRef,
+                    (snapshot) => {
+                        if (snapshot.exists()) {
+                            const data = snapshot.data();
+                            tournamentData = {
+                                matches: data.matches || {},
+                                tiebreakerWinner: data.tiebreakerWinner || null,
+                                updatedAt: data.updatedAt || null
+                            };
+                        }
+                        renderAll();
+                    },
+                    (error) => {
+                        console.error('Realtime sync error:', error);
+                    }
+                );
+            } catch (e) {
+                console.error('Firebase init failed:', e);
+                renderAll();
+            }
+        }
+
+        // --- Global Window Handlers for UI Events ---
+        window.selectRound = function(rNum) {
+            activeRound = rNum;
+            renderAll();
+        };
+
+        window.setMatchResult = async function(matchId, result) {
+            if (!isAdmin) return;
+            const updatedMatches = { ...(tournamentData.matches || {}) };
+            if (result === null) {
+                delete updatedMatches[matchId];
+            } else {
+                updatedMatches[matchId] = result;
+            }
+            tournamentData.matches = updatedMatches;
+
+            // Recalculate if tiebreaker winner is still valid
+            const calc = computeTournamentStats();
+            if (!calc.isTopTied) {
+                tournamentData.tiebreakerWinner = null;
+            }
+
+            renderAll();
+            await saveTournamentToCloud(tournamentData);
+        };
+
+        window.setTiebreakerWinner = async function(teamId) {
+            if (!isAdmin) return;
+            tournamentData.tiebreakerWinner = teamId;
+            renderAll();
+            await saveTournamentToCloud(tournamentData);
+        };
+
+        // --- Admin Auth Modal Functions ---
+        window.openLoginModal = function() {
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('usernameInput').value = '';
+            document.getElementById('passwordInput').value = '';
+            const modal = document.getElementById('loginModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => document.getElementById('usernameInput').focus(), 100);
+        };
+
+        window.closeLoginModal = function() {
+            const modal = document.getElementById('loginModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.handleLogin = function(e) {
+            e.preventDefault();
+            const u = document.getElementById('usernameInput').value.trim();
+            const p = document.getElementById('passwordInput').value.trim();
+
+            if (u === 'admin' && p === 'admin') {
+                isAdmin = true;
+                closeLoginModal();
+                renderAll();
+                showToast('خوش آمدید! اکنون می‌توانید امتیازات را ثبت کنید.');
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        };
+
+        window.logoutAdmin = function() {
+            isAdmin = false;
+            renderAll();
+            showToast('از حالت مدیر خارج شدید');
+        };
+
+        // --- Reset Modal Functions ---
+        window.openResetModal = function() {
+            if (!isAdmin) return;
+            const modal = document.getElementById('resetModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeResetModal = function() {
+            const modal = document.getElementById('resetModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.confirmResetTournament = async function() {
+            if (!isAdmin) return;
+            tournamentData = {
+                matches: {},
+                tiebreakerWinner: null,
+                updatedAt: Date.now()
+            };
+            closeResetModal();
+            renderAll();
+            await saveTournamentToCloud(tournamentData);
+        };
+
+        // --- Telegram Modal & Report Copy Functions ---
+        window.openTelegramGuideModal = function() {
+            const modal = document.getElementById('telegramModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeTelegramGuideModal = function() {
+            const modal = document.getElementById('telegramModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.copyShareableTournamentLink = function() {
+            updateUrlHashWithState(tournamentData);
+            const fullUrl = window.location.href;
+            const textarea = document.createElement('textarea');
+            textarea.value = fullUrl;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            showToast('لینک حاوی آخرین امتیازات کپی شد! در تلگرام بفرستید.');
+        };
+
+        window.copyTelegramReport = function() {
+            const calc = computeTournamentStats();
+            let text = `♟️ جدول رده‌بندی تورنمنت شطرنج ♟️\n`;
+            text += `━━━━━━━━━━━━━━━\n`;
+            calc.sorted.forEach((t, i) => {
+                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${toPersianNum(i + 1)}-`;
+                text += `${medal} ${t.name} : ${toPersianNum(t.points)} امتیاز (${toPersianNum(t.played)} بازی)\n`;
+            });
+            text += `━━━━━━━━━━━━━━━\n`;
+            text += `📊 بازی‌های انجام شده: ${toPersianNum(calc.completedMatchesCount)} از ۱۰\n`;
+
+            if (calc.allRegularDone && calc.topTwo[0] && calc.topTwo[0].points > 0) {
+                if (!calc.isTopTied) {
+                    text += `🏆 قهرمان نهایی: ${calc.topTwo[0].name}\n`;
+                } else if (tournamentData.tiebreakerWinner) {
+                    text += `🏆 قهرمان نهایی (برنده فینال): ${getTeamName(tournamentData.tiebreakerWinner)}\n`;
+                } else {
+                    text += `⚡ تساوی در صدر جدول! در انتظار بازی فینال تک‌حذفی\n`;
+                }
+            }
+
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            showToast('جدول امتیازات کپی شد! اکنون در تلگرام Paste کنید.');
+        };
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStateFromUrlHash();
+            renderAll();
+            initCloudSync();
+        });
+    </script>
+</body>
+</html>
